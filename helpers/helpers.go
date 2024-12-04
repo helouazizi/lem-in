@@ -67,43 +67,48 @@ this function check data validation
 
 func (F *Farm) ValidateData(data []string) error {
 	var err error
-	status := true
+
 	F.Ants, err = strconv.Atoi(data[0])
 	if err != nil {
 		return err
 	}
-	F.StartRoom, F.EndRoom, status = CheckDoubles(data)
-	if !status {
+	if !F.CheckDoubles(data) {
 		return errors.New("duplicates found")
 	}
 
 	return nil
 }
 
-func CheckDoubles(data []string) (string, string, bool) {
+func (F *Farm) CheckDoubles(data []string) bool {
 	index := 0
-	strat := ""
-	end := ""
-	for i := 0; i < len(data)-1; i++ {
+	for i := 1; i < len(data)-1; i++ {
 		for j := i + 1; j < len(data); j++ {
 			if data[i] == data[j] {
-				return "", "", false
+				return false
 			}
 		}
 	}
 	for i := 0; i < len(data); i++ {
 		if i < len(data)-1 && data[i] == "##start" {
-			strat = data[i+1]
+			F.StartRoom = data[i+1]
+			check := strings.Split(F.StartRoom, " ")
+			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
+				return false
+			}
 			index++
 		}
 		if i < len(data)-1 && data[i] == "##end" {
-			end = data[i+1]
+			F.EndRoom = data[i+1]
+			check := strings.Split(F.EndRoom, " ")
+			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
+				return false
+			}
 			index += 2
 		}
 	}
 	if index != 3 {
-		return "", "", false
+		return index == 3
 	}
 
-	return strat, end, true
+	return true
 }
