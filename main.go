@@ -13,17 +13,22 @@ func main() {
 		fmt.Println("Usage: go run . exemple.txt")
 		return
 	}
+	farm := &helpers.Farm{}
+
 	// now lets read the file to extract ou data
 	fileName := os.Args[1]
 	data, err := helpers.ReadFile(fileName)
 	if err != nil {
-		fmt.Println("ERROR: invalid data format 1")
+		fmt.Println(err)
 		return
 	}
-	numOfants, sratrRoom, endRoom, err := helpers.ParseData(data)
+	err = farm.ValidateData(data)
 	if err != nil {
-		fmt.Println("ERROR: invalid data format")
+		fmt.Println("ERROR: invalid data format 2")
 		return
 	}
-	fmt.Println(numOfants, "\n", sratrRoom, "\n", endRoom)
+	fmt.Println(farm.Ants)
+	fmt.Println(farm.StartRoom)
+	fmt.Println(farm.EndRoom)
+	fmt.Println("good data")
 }
