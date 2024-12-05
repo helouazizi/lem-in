@@ -80,6 +80,9 @@ func (F *Farm) ValidateData(data []string) error {
 	if !F.CheckDoubles(data) {
 		return errors.New("duplicates found")
 	}
+	if !F.CheckLinks() {
+		return errors.New("duplicates LINKER found")
+	}
 
 	return nil
 }
@@ -104,7 +107,7 @@ func (F *Farm) CheckDoubles(data []string) bool {
 			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
 				return false
 			}
-			F.Rooms = append(F.Rooms, F.StartRoom)
+
 			index++
 		}
 		if i < len(data)-1 && data[i] == "##end" {
@@ -113,14 +116,16 @@ func (F *Farm) CheckDoubles(data []string) bool {
 			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
 				return false
 			}
-			F.Rooms = append(F.Rooms, F.EndRoom)
+
 			index++
 		}
 
 		if len(check) != 3 && data[i] != "##start" && data[i] != "##end" {
 			F.Links = append(F.Links, data[i])
 		} else {
-			F.Rooms = append(F.Rooms, data[i])
+			if data[i] != "##start" && data[i] != "##end" {
+				F.Rooms = append(F.Rooms, data[i])
+			}
 		}
 
 	}
@@ -128,5 +133,25 @@ func (F *Farm) CheckDoubles(data []string) bool {
 		return index == 2
 	}
 
+	return true
+}
+
+func (F *Farm) CheckLinks() bool {
+	index := 0
+	for _, link := range F.Links {
+		check := strings.Split(link, "-")
+		if check[0] == check[1] {
+			return false
+		}
+		for _, room := range F.Rooms {
+			check2 := strings.Split(room, " ")
+			if check[0] == check2[0] {
+				index++
+			}
+		}
+	}
+	if index != len(F.Links) {
+		return index == len(F.Links)
+	}
 	return true
 }
