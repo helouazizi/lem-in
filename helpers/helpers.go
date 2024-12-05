@@ -46,10 +46,11 @@ func ReadFile(fileName string) ([]string, error) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		line = strings.TrimSpace(line)
-		if line != "" {
-			data = append(data, line)
-		}
 
+		if line == "" || (line[0] == '#' && line != "##start" && line != "##end") {
+			continue
+		}
+		data = append(data, line)
 	}
 	if len(data) < 6 {
 		return nil, errors.New("invalid data") // not enough data
@@ -72,6 +73,10 @@ func (F *Farm) ValidateData(data []string) error {
 	if err != nil {
 		return err
 	}
+	if F.Ants <= 0 {
+		return errors.New("invalid number of ants")
+	}
+
 	if !F.CheckDoubles(data) {
 		return errors.New("duplicates found")
 	}
@@ -88,13 +93,18 @@ func (F *Farm) CheckDoubles(data []string) bool {
 			}
 		}
 	}
-	for i := 0; i < len(data); i++ {
+	for i := 1; i < len(data); i++ {
+		check := strings.Split(data[i], " ")
+		if len(check) != 1 && len(check) != 3 {
+			return false
+		}
 		if i < len(data)-1 && data[i] == "##start" {
 			F.StartRoom = data[i+1]
 			check := strings.Split(F.StartRoom, " ")
 			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
 				return false
 			}
+			F.Rooms = append(F.Rooms, F.StartRoom)
 			index++
 		}
 		if i < len(data)-1 && data[i] == "##end" {
@@ -103,11 +113,19 @@ func (F *Farm) CheckDoubles(data []string) bool {
 			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
 				return false
 			}
-			index += 2
+			F.Rooms = append(F.Rooms, F.EndRoom)
+			index++
 		}
+
+		if len(check) != 3 && data[i] != "##start" && data[i] != "##end" {
+			F.Links = append(F.Links, data[i])
+		} else {
+			F.Rooms = append(F.Rooms, data[i])
+		}
+
 	}
-	if index != 3 {
-		return index == 3
+	if index != 2 {
+		return index == 2
 	}
 
 	return true

@@ -30,5 +30,7 @@ func main() {
 	fmt.Println(farm.Ants)
 	fmt.Println(farm.StartRoom)
 	fmt.Println(farm.EndRoom)
+	fmt.Println(farm.Rooms)
+	fmt.Println(farm.Links)
 	fmt.Println("good data")
 }
