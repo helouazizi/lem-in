@@ -11,13 +11,13 @@ import (
 // lets represent our room as struct with it 's properties
 type Room struct {
 	Name string
-	X, Y int
+	X, Y string
 }
 
 // lets reprasent our farm of ants as struct with it's properties
 type Farm struct {
-	Rooms              []string
-	Links              []string
+	Rooms              map[string]Room
+	Links              map[string][]string
 	StartRoom, EndRoom string
 	Ants               int
 }
@@ -25,7 +25,7 @@ type Farm struct {
 /*
 this function will read the file data
 and checking the foramt of the data
-if the data is in the correct format
+if the data is in the correct formatF.StartRoom = data[i+1]
 by checking the number of ants and the
 and rooms representation is correct
 and valid links between rooms or any doublacate rooms and links
@@ -80,8 +80,14 @@ func (F *Farm) ValidateData(data []string) error {
 	if !F.CheckDoubles(data) {
 		return errors.New("duplicates found")
 	}
-	if !F.CheckLinks() {
-		return errors.New("duplicates LINKER found")
+
+	err = F.RoomsTraitment(data)
+	if err != nil {
+		return err
+	}
+	err = F.LinksTraitement(data)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -89,46 +95,21 @@ func (F *Farm) ValidateData(data []string) error {
 
 func (F *Farm) CheckDoubles(data []string) bool {
 	index := 0
-	for i := 1; i < len(data)-1; i++ {
-		for j := i + 1; j < len(data); j++ {
-			if data[i] == data[j] {
-				return false
-			}
-		}
-	}
 	for i := 1; i < len(data); i++ {
 		check := strings.Split(data[i], " ")
 		if len(check) != 1 && len(check) != 3 {
 			return false
 		}
-		if i < len(data)-1 && data[i] == "##start" {
-			F.StartRoom = data[i+1]
-			check := strings.Split(F.StartRoom, " ")
-			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
+		for j := i + 1; j < len(data); j++ {
+			if data[i] == data[j] {
 				return false
 			}
-
+		}
+		if data[i] == "##start" || data[i] == "##end" {
 			index++
 		}
-		if i < len(data)-1 && data[i] == "##end" {
-			F.EndRoom = data[i+1]
-			check := strings.Split(F.EndRoom, " ")
-			if len(check) != 3 || strings.Contains(check[0], "L") || strings.Contains(check[0], "#") {
-				return false
-			}
-
-			index++
-		}
-
-		if len(check) != 3 && data[i] != "##start" && data[i] != "##end" {
-			F.Links = append(F.Links, data[i])
-		} else {
-			if data[i] != "##start" && data[i] != "##end" {
-				F.Rooms = append(F.Rooms, data[i])
-			}
-		}
-
 	}
+
 	if index != 2 {
 		return index == 2
 	}
@@ -136,22 +117,52 @@ func (F *Farm) CheckDoubles(data []string) bool {
 	return true
 }
 
-func (F *Farm) CheckLinks() bool {
-	index := 0
-	for _, link := range F.Links {
+func (F *Farm) LinksTraitement(data []string) error {
+	if F.Links == nil {
+		F.Links = make(map[string][]string)
+	}
+	for _, link := range data {
 		check := strings.Split(link, "-")
-		if check[0] == check[1] {
-			return false
+		if len(check) != 2 {
+			continue
 		}
-		for _, room := range F.Rooms {
-			check2 := strings.Split(room, " ")
-			if check[0] == check2[0] {
-				index++
+		_,exist := F.Rooms[check[0]]
+		if !exist {
+			return errors.New("room not found")
+		}
+		_,exist1 := F.Rooms[check[1]]
+		if !exist1 {
+			return errors.New("room not found")
+		}
+		F.Links[check[0]] = append(F.Links[check[0]], check[1])
+		F.Links[check[1]]  = append(F.Links[check[1]], check[0])
+
+	}
+	return nil
+}
+
+func (F *Farm) RoomsTraitment(data []string) error {
+	if F.Rooms == nil {
+		F.Rooms = make(map[string]Room)
+	}
+	for i, line := range data {
+		if i < len(data)-1 && line == "##start" || line == "##end" {
+			check := strings.Split(data[i+1], " ")
+			if len(check) != 3 {
+				return errors.New("invalid start room")
 			}
+			if line == "##start" {
+				F.StartRoom = data[i+1]
+			} else {
+				F.EndRoom = data[i+1]
+			}
+			// add the the room to the map
+			F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
+		}
+		check := strings.Split(line, " ")
+		if len(check) == 3 {
+			F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
 		}
 	}
-	if index != len(F.Links) {
-		return index == len(F.Links)
-	}
-	return true
+	return nil
 }
