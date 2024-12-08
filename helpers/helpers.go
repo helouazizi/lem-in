@@ -1,3 +1,4 @@
+// helpers/helpers.go
 package helpers
 
 import (
@@ -126,16 +127,16 @@ func (F *Farm) LinksTraitement(data []string) error {
 		if len(check) != 2 {
 			continue
 		}
-		_,exist := F.Rooms[check[0]]
+		_, exist := F.Rooms[check[0]]
 		if !exist {
 			return errors.New("room not found")
 		}
-		_,exist1 := F.Rooms[check[1]]
+		_, exist1 := F.Rooms[check[1]]
 		if !exist1 {
 			return errors.New("room not found")
 		}
 		F.Links[check[0]] = append(F.Links[check[0]], check[1])
-		F.Links[check[1]]  = append(F.Links[check[1]], check[0])
+		F.Links[check[1]] = append(F.Links[check[1]], check[0])
 
 	}
 	return nil
@@ -152,9 +153,9 @@ func (F *Farm) RoomsTraitment(data []string) error {
 				return errors.New("invalid start room")
 			}
 			if line == "##start" {
-				F.StartRoom = data[i+1]
+				F.StartRoom = check[0]
 			} else {
-				F.EndRoom = data[i+1]
+				F.EndRoom = check[0]
 			}
 			// add the the room to the map
 			F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
@@ -165,4 +166,66 @@ func (F *Farm) RoomsTraitment(data []string) error {
 		}
 	}
 	return nil
+}
+
+/*
+lets use bfs algorithm to find the shortest path between stert and end rooms
+*/
+
+func (F *Farm) Path_Finder() [][]string {
+
+	queue := [][]string{{F.StartRoom}}
+	result := [][]string{}
+
+	for len(queue) > 0 {
+		path := queue[0]
+		queue = queue[1:]
+		currentRoom := path[len(path)-1]
+		// lets append the path if the room is the end room
+		if currentRoom == F.EndRoom {
+			// lets check if the pats have seme room at the index because this can ce a collesion
+			if notcollesion(result, path) {
+				result = append(result, path)
+			}
+			//result = append(result, path)
+		}
+		// lets get all the rooms that are connected to the current room
+		for _, connection := range F.Links[currentRoom] {
+			if !contains(path, connection) {
+				newPath := append([]string{}, path...)
+				newPath = append(newPath, connection)
+				queue = append(queue, newPath)
+			}
+
+		}
+
+	}
+	return result
+}
+
+func contains(path []string, connection string) bool {
+	for _, connected := range path {
+		if connected == connection {
+			return true
+		}
+	}
+	return false
+}
+
+func notcollesion(result [][]string, path []string) bool {
+	for _, oldpath := range result {
+		minlen := len(oldpath)
+		// this condition avoiding out of range
+		if len(path) < len(oldpath) {
+			minlen = len(path)
+		}
+		// be sure to ignore strat room and end room 
+		for i := 1; i < minlen-1; i++ {
+			if oldpath[i] == path[i] {
+				return false
+			}
+		}
+
+	}
+	return true
 }

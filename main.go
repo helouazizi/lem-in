@@ -28,10 +28,13 @@ func main() {
 		fmt.Println("ERROR: invalid data format")
 		return
 	}
-	fmt.Println(farm.Ants)
+	/*fmt.Println(farm.Ants)
 	fmt.Println(farm.StartRoom)
 	fmt.Println(farm.EndRoom)
 	fmt.Println(farm.Rooms)
 	fmt.Println(farm.Links)
-	fmt.Println("good data")
+	fmt.Println("good data")*/
+	paths := farm.Path_Finder()
+	fmt.Println(paths)
+	fmt.Println(len(paths))
 }
