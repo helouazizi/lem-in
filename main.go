@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"lem-in/helpers" // add somthig to test
+	"lem-in/helpers" // add somthig to test in my life
 )
 
 func main() {
