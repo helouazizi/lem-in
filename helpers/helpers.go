@@ -21,6 +21,8 @@ type Farm struct {
 	Links              map[string][]string
 	StartRoom, EndRoom string
 	Ants               int
+	AntsPositions      map[int]string // Maps ant number to current room name
+	AntMoves           [][]string
 }
 
 /*
@@ -219,7 +221,7 @@ func notcollesion(result [][]string, path []string) bool {
 		if len(path) < len(oldpath) {
 			minlen = len(path)
 		}
-		// be sure to ignore strat room and end room 
+		// be sure to ignore strat room and end room
 		for i := 1; i < minlen-1; i++ {
 			if oldpath[i] == path[i] {
 				return false

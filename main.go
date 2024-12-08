@@ -35,6 +35,9 @@ func main() {
 	fmt.Println(farm.Links)
 	fmt.Println("good data")*/
 	paths := farm.Path_Finder()
-	fmt.Println(paths)
+	
 	fmt.Println(len(paths))
+	fmt.Println(paths)
+	//fmt.Println(farm.AntDistribution)
+
 }
