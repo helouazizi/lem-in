@@ -4,6 +4,7 @@ package helpers
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -33,149 +34,119 @@ by checking the number of ants and the
 and rooms representation is correct
 and valid links between rooms or any doublacate rooms and links
 or any invalid data it will return an error
-*/
-func ReadFile(fileName string) ([]string, error) {
-	// open the file
-	data := []string{}
-	file, err := os.Open(fileName)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	// read the file by using the buffio pkg
-	// that can give us convenient way to read input from a file
-	// line by line using the  function scan()
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		line = strings.TrimSpace(line)
-
-		if line == "" || (line[0] == '#' && line != "##start" && line != "##end") {
-			continue
-		}
-		data = append(data, line)
-	}
-	if len(data) < 6 {
-		return nil, errors.New("invalid data") // not enough data
-	}
-	return data, nil
-}
-
-/*
 this function check data validation
 1. check the first line is number for number of ants
 2. check the ##start and ##end room is exist and not duplecated
 3. check the rooms are not duplicated and never start with a 'L' or '#' and must have valid and unique  cordonates x,y
 4. check the links between rooms are valid and check the room is exist or not because we cant link into a non exist room
 */
-
-func (F *Farm) ValidateData(data []string) error {
+func (F *Farm) ReadFile(fileName string) error {
+	// open the file
 	var err error
-
-	F.Ants, err = strconv.Atoi(data[0])
+	exist := 0
+	file, err := os.Open(fileName)
 	if err != nil {
 		return err
 	}
-	if F.Ants <= 0 {
-		return errors.New("invalid number of ants")
-	}
-
-	if !F.CheckDoubles(data) {
-		return errors.New("duplicates found")
-	}
-
-	err = F.RoomsTraitment(data)
-	if err != nil {
-		return err
-	}
-	err = F.LinksTraitement(data)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (F *Farm) CheckDoubles(data []string) bool {
-	index := 0
-	for i := 1; i < len(data); i++ {
-		check := strings.Split(data[i], " ")
-		if len(check) != 1 && len(check) != 3 {
-			return false
-		}
-		for j := i + 1; j < len(data); j++ {
-			if data[i] == data[j] {
-				return false
-			}
-		}
-		if data[i] == "##start" || data[i] == "##end" {
-			index++
-		}
-	}
-
-	if index != 2 {
-		return index == 2
-	}
-
-	return true
-}
-
-func (F *Farm) LinksTraitement(data []string) error {
-	if F.Links == nil {
-		F.Links = make(map[string][]string)
-	}
-	for _, link := range data {
-		check := strings.Split(link, "-")
-		if len(check) != 2 {
-			continue
-		}
-		_, exist := F.Rooms[check[0]]
-		if !exist {
-			return errors.New("room not found")
-		}
-		_, exist1 := F.Rooms[check[1]]
-		if !exist1 {
-			return errors.New("room not found")
-		}
-		F.Links[check[0]] = append(F.Links[check[0]], check[1])
-		F.Links[check[1]] = append(F.Links[check[1]], check[0])
-
-	}
-	return nil
-}
-
-func (F *Farm) RoomsTraitment(data []string) error {
+	defer file.Close()
+	// read the file by using the buffio pkg
+	// that can give us convenient way to read input from a file
+	// line by line using the  function scan()
+	// befor looping lets inisialise our maps
 	if F.Rooms == nil {
 		F.Rooms = make(map[string]Room)
 	}
-	for i, line := range data {
-		if i < len(data)-1 && line == "##start" || line == "##end" {
-			check := strings.Split(data[i+1], " ")
-			if len(check) != 3 {
-				return errors.New("invalid start room")
+	if F.Links == nil {
+		F.Links = make(map[string][]string)
+	}
+	scanner := bufio.NewScanner(file)
+	i := 0
+	for scanner.Scan() {
+
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		// lets check if the first line is the valid number off ants
+		if i == 0 {
+			F.Ants, err = strconv.Atoi(line)
+			if err != nil {
+				return err
 			}
-			if line == "##start" {
-				F.StartRoom = check[0]
-			} else {
-				F.EndRoom = check[0]
+			if F.Ants <= 0 {
+				return errors.New("invalid ants number")
 			}
-			// add the the room to the map
-			F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
+			i++
+			continue
+		}
+		if i == 2 {
+			check := strings.Split(line, " ")
+			F.StartRoom = check[0]
+			i = 1
+
+		}
+		if i == 3 {
+			check := strings.Split(line, " ")
+			F.EndRoom = check[0]
+			i = 1
+
+		}
+
+		if line == "##start" {
+			i = 2
+			exist++
+			///F.Rooms["##start"] = Room{Name: "", X: "", Y: ""}
+			continue
+		}
+		if line == "##end" {
+			i = 3
+			exist += 2
+			// F.Rooms["##end"] = Room{Name: "", X: "", Y: ""}
+			continue
+		}
+		if line == "" || (line[0] == '#' && line != "##start" && line != "##end") {
+			continue
 		}
 		check := strings.Split(line, " ")
 		if len(check) == 3 {
-			F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
+			_, exist := F.Rooms[check[0]]
+			if !exist {
+				F.Rooms[check[0]] = Room{Name: check[0], X: check[1], Y: check[2]}
+			} else {
+				return errors.New("found Duplicated rooms")
+			}
+
+		} else if len(check) == 1 {
+			link := strings.Split(line, "-")
+			if len(link) != 2 {
+				fmt.Println(line)
+				return errors.New("no valid link found")
+
+			}
+			_, exist := F.Rooms[link[0]]
+			if !exist {
+				fmt.Println(line)
+				return errors.New("no valid link found")
+			}
+			_, exist1 := F.Rooms[link[1]]
+			if !exist1 {
+				fmt.Println(line)
+				return errors.New("no valid link found")
+			}
+			F.Links[link[0]] = append(F.Links[link[0]], link[1])
+			F.Links[link[1]] = append(F.Links[link[1]], link[0])
+
+		} else {
+			continue
 		}
+
 	}
+	if exist != 3 {
+		return errors.New("no start or end room")
+	}
+
 	return nil
 }
 
-/*
-lets use bfs algorithm to find the shortest path between stert and end rooms
-*/
-
 func (F *Farm) Path_Finder() [][]string {
-
 	queue := [][]string{{F.StartRoom}}
 	result := [][]string{}
 
@@ -189,7 +160,7 @@ func (F *Farm) Path_Finder() [][]string {
 			if notcollesion(result, path) {
 				result = append(result, path)
 			}
-			//result = append(result, path)
+			// result = append(result, path)
 		}
 		// lets get all the rooms that are connected to the current room
 		for _, connection := range F.Links[currentRoom] {
@@ -198,7 +169,6 @@ func (F *Farm) Path_Finder() [][]string {
 				newPath = append(newPath, connection)
 				queue = append(queue, newPath)
 			}
-
 		}
 
 	}

@@ -18,26 +18,24 @@ func main() {
 
 	// now lets read the file to extract ou data
 	fileName := os.Args[1]
-	data, err := helpers.ReadFile(fileName)
+	err := farm.ReadFile(fileName)
 	if err != nil {
+		// fmt.Println("ERROR: invalid data format")
 		fmt.Println(err)
 		return
 	}
-	err = farm.ValidateData(data)
-	if err != nil {
-		fmt.Println("ERROR: invalid data format")
-		return
-	}
-	/*fmt.Println(farm.Ants)
-	fmt.Println(farm.StartRoom)
-	fmt.Println(farm.EndRoom)
-	fmt.Println(farm.Rooms)
-	fmt.Println(farm.Links)
-	fmt.Println("good data")*/
-	paths := farm.Path_Finder()
-	
-	fmt.Println(len(paths))
-	fmt.Println(paths)
-	//fmt.Println(farm.AntDistribution)
+	// err = farm.ValidateData(data)
+	// if err != nil {
+	// 	fmt.Println()
+	// 	return
+	// }
+	// fmt.Println(farm.Ants)
+	// fmt.Println(farm.StartRoom)
+	// fmt.Println(farm.EndRoom)
+	// fmt.Println(farm.Rooms)
+	// fmt.Println(farm.Links)
 
+	//paths := farm.Path_Finder()
+	//fmt.Println(paths)
+	fmt.Println("good data")
 }
