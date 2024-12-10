@@ -22,8 +22,9 @@ type Farm struct {
 	Links              map[string][]string
 	StartRoom, EndRoom string
 	Ants               int
-	AntsPositions      map[int]string // Maps ant number to current room name
-	AntMoves           [][]string
+	FileSize           int64
+	// AntsPositions      map[int]string // Maps ant number to current room name
+	// AntMoves           [][]string
 }
 
 /*
@@ -43,6 +44,11 @@ this function check data validation
 func (F *Farm) ReadFile(fileName string) error {
 	// open the file
 	var err error
+	fileinfo, err := os.Stat("test.txt")
+	if err != nil {
+		return err
+	}
+	F.FileSize = int64(fileinfo.Size())
 	exist := 0
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -147,27 +153,41 @@ func (F *Farm) ReadFile(fileName string) error {
 }
 
 func (F *Farm) Path_Finder() [][]string {
+	F.Rooms = nil
+	fmt.Println(F.Rooms, "it freed")
 	queue := [][]string{{F.StartRoom}}
 	result := [][]string{}
 
 	for len(queue) > 0 {
+		// I := 0
 		path := queue[0]
 		queue = queue[1:]
 		currentRoom := path[len(path)-1]
-		// lets append the path if the room is the end room
+		// lets append the path if the room is the end roomi
 		if currentRoom == F.EndRoom {
 			// lets check if the pats have seme room at the index because this can ce a collesion
 			if notcollesion(result, path) {
 				result = append(result, path)
 			}
-			// result = append(result, path)
 		}
 		// lets get all the rooms that are connected to the current room
 		for _, connection := range F.Links[currentRoom] {
 			if !contains(path, connection) {
+				// if currentRoom == F.StartRoom {
+
 				newPath := append([]string{}, path...)
 				newPath = append(newPath, connection)
 				queue = append(queue, newPath)
+
+				// 	}else if I== 0{
+				// 		newPath := append([]string{}, path...)
+				// 		newPath = append(newPath, connection)
+				// 		queue = append(queue, newPath)
+
+				// 		I++
+				// 		break
+
+				//}
 			}
 		}
 

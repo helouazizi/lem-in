@@ -24,15 +24,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	// err = farm.ValidateData(data)
-	// if err != nil {l
-	// 	fmt.Println()
-	// 	return
-	// }
-	fmt.Println(farm.Ants)
+
+	// fmt.Println(farm.Ants)
+	
 	fmt.Println(farm.StartRoom)
-	fmt.Println(farm.EndRoom)
-	fmt.Println(farm.Rooms)
+	 fmt.Println(farm.EndRoom)
+	// fmt.Println(farm.Rooms)
 	fmt.Println(farm.Links)
 
 	paths := farm.Path_Finder()
