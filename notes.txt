@@ -1,3 +1,4 @@
+notes.txt
 1 . check if we start with start or end room
 2 . check if liunks are too much we gonna use heap allocation and limitation of 1000 ants
 3 . otherwise we gonna use stack allocation 

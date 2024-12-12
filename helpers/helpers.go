@@ -43,8 +43,8 @@ func (G *Graph) Add_Verteces(v string) {
 	G.GraphASList[v] = list.New()
 }
 
-// lets create a methode to add edges 
-func (G *Graph) Add_Edges(v1, v2 string){
+// lets create a methode to add edges
+func (G *Graph) Add_Edges(v1, v2 string) {
 	if G.GraphASList[v1] == nil {
 		G.GraphASList[v1] = list.New()
 	}
@@ -72,7 +72,7 @@ this function check data validation
 func (F *Farm) ReadFile(fileName string) error {
 	// open the file
 	var err error
-	graph := Add_Graph()
+
 	fileinfo, err := os.Stat("test.txt")
 	if err != nil {
 		return err
@@ -115,12 +115,15 @@ func (F *Farm) ReadFile(fileName string) error {
 		if i == 2 {
 			check := strings.Split(line, " ")
 			F.StartRoom = check[0]
+
 			i = 1
 
 		}
+
 		if i == 3 {
 			check := strings.Split(line, " ")
 			F.EndRoom = check[0]
+
 			i = 1
 
 		}
@@ -145,6 +148,7 @@ func (F *Farm) ReadFile(fileName string) error {
 			_, exist := F.Rooms[check[0]]
 			if !exist {
 				F.Rooms[check[0]] = &Room{X: check[1], Y: check[2]}
+
 			} else {
 				return errors.New("found Duplicated rooms")
 			}
@@ -169,6 +173,8 @@ func (F *Farm) ReadFile(fileName string) error {
 			F.Links[link[0]] = append(F.Links[link[0]], link[1])
 			F.Links[link[1]] = append(F.Links[link[1]], link[0])
 
+			//graph.Add_Edges(link[1],link[0])
+
 		} else {
 			continue
 		}
@@ -181,20 +187,42 @@ func (F *Farm) ReadFile(fileName string) error {
 	return nil
 }
 
-func (F *Farm) Path_Finder() [][]string {
+func (F *Farm) Path_Finder(g *Graph) [][]string {
 	// lets frre up the rooms map for memory
+
 	F.Rooms = nil
-	fmt.Println(F.Rooms, "rooms has been removed")
+
 	// lets extract all start direct neghbors
 	jiran_dyal_start := F.Links[F.StartRoom]
+	F.Links = nil
+	fmt.Println(F.Rooms, "rooms and links has been removed")
 	// lets create a map to track the visited rooms
-	visited := make(map[string]bool)
-	visited[F.StartRoom] = true
+
 	result := [][]string{}
 	for _, jar := range jiran_dyal_start {
+		visited := make(map[string]bool)
+		visited[F.StartRoom] = true
+		queue := list.New()
+		queue.PushFront(jar)
 		path := []string{F.StartRoom}
-		path = append(path, jar)
+		//path = append(path, jar)
+
 		visited[jar] = true
+		for queue.Len() > 0 {
+			current := queue.Front().Value.(string)
+			queue.Remove(queue.Front())
+			path = append(path, current)
+			if current == F.EndRoom {
+				result = append(result, path)
+			}
+			for neighborElement := g.GraphASList[current].Front(); neighborElement != nil; neighborElement = neighborElement.Next() {
+				neighbor := neighborElement.Value.(string)
+				if !visited[neighbor] {
+					visited[neighbor] = true
+					queue.PushFront(neighbor)
+				}
+			}
+		}
 
 		result = append(result, path)
 
@@ -268,3 +296,15 @@ func (F *Farm) Path_Finder() [][]string {
 // 	}
 // 	return true
 // }
+
+func (F *Farm) Crate_Graph() *Graph {
+	graph := Add_Graph()
+	for room, jiran := range F.Links {
+		graph.Add_Verteces(room)
+		for _, jar := range jiran {
+			graph.Add_Edges(room, jar)
+		}
+
+	}
+	return graph
+}

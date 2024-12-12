@@ -25,14 +25,10 @@ func main() {
 		return
 	}
 
-	// fmt.Println(farm.Ants)
-
 	fmt.Println(farm.StartRoom)
 	fmt.Println(farm.EndRoom)
-	// fmt.Println(farm.Rooms)
-
-	paths := farm.Path_Finder()
+	graph := farm.Crate_Graph()
+	paths := farm.Path_Finder(graph)
 	fmt.Println(paths)
-	// fmt.Println(farm.Links,"links has been removed")
 	fmt.Println("good data")
 }
