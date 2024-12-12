@@ -26,13 +26,13 @@ func main() {
 	}
 
 	// fmt.Println(farm.Ants)
-	
+
 	fmt.Println(farm.StartRoom)
-	 fmt.Println(farm.EndRoom)
+	fmt.Println(farm.EndRoom)
 	// fmt.Println(farm.Rooms)
-	fmt.Println(farm.Links)
 
 	paths := farm.Path_Finder()
 	fmt.Println(paths)
+	// fmt.Println(farm.Links,"links has been removed")
 	fmt.Println("good data")
 }
