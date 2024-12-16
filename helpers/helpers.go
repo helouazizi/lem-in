@@ -187,87 +187,114 @@ func (F *Farm) ReadFile(fileName string) error {
 	return nil
 }
 
-func (F *Farm) Path_Finder(g *Graph) [][]string {
+func (F *Farm) Path_Finder(adjacencyMatrix [][]bool, start int, roomNames []string) [][]string {
 	// lets frre up the rooms map for memory
 
-	F.Rooms = nil
-
 	// lets extract all start direct neghbors
-	jiran_dyal_start := F.Links[F.StartRoom]
+	//jiran_dyal_start := F.Links[F.StartRoom]
+	//fmt.Println(len(jiran_dyal_start))
 	F.Links = nil
+	F.Rooms = nil
 	fmt.Println(F.Rooms, "rooms and links has been removed")
-	// lets create a map to track the visited rooms
+	visited := make([]bool, len(roomNames))
+	queue := []int{start}
+	visited[start] = true
 
-	result := [][]string{}
-	for _, jar := range jiran_dyal_start {
+	var paths [][]string
+	currentPath := []string{roomNames[start]}
+
+	for len(queue) > 0 {
+		vertex := queue[0]
+		queue = queue[1:]
+
+		// Explore neighbors
+		for i := 0; i < len(adjacencyMatrix[vertex]); i++ {
+			if adjacencyMatrix[vertex][i] && !visited[i] {
+				visited[i] = true
+				queue = append(queue, i)
+
+				// Create a new path for this neighbor
+				newPath := append([]string(nil), currentPath...) // Copy current path
+				newPath = append(newPath, roomNames[i])          // Add the neighbor
+				paths = append(paths, newPath)                   // Store the new path
+			}
+		}
+	}
+
+	return paths
+
+	/*
+		//visited[F.StartRoom] = true
+		result := [][]string{}
+		//for _, jar := range jiran_dyal_start {
 		visited := make(map[string]bool)
-		visited[F.StartRoom] = true
+		//fmt.Println(1)
 		queue := list.New()
-		queue.PushFront(jar)
+		queue.PushFront(F.StartRoom)
 		path := []string{F.StartRoom}
-		//path = append(path, jar)
-
-		visited[jar] = true
+		visited[F.StartRoom] = true
 		for queue.Len() > 0 {
+			//fmt.Println(2)
 			current := queue.Front().Value.(string)
 			queue.Remove(queue.Front())
 			path = append(path, current)
 			if current == F.EndRoom {
 				result = append(result, path)
+				break
+				//path = []string{}
 			}
 			for neighborElement := g.GraphASList[current].Front(); neighborElement != nil; neighborElement = neighborElement.Next() {
 				neighbor := neighborElement.Value.(string)
-				if !visited[neighbor] {
+				if !visited[neighbor] && neighbor != F.StartRoom {
 					visited[neighbor] = true
 					queue.PushFront(neighbor)
 				}
 			}
+			result = append(result, path)
 		}
 
-		result = append(result, path)
+		//}
 
-	}
+		// for len(queue) > 0 {
+		// 	// count := 0
+		// 	path := queue[0]
+		// 	queue = queue[1:]
+		// 	currentRoom := path[len(path)-1]
+		// 	// lets append the path if the room is the end roomi
+		// 	if currentRoom == F.EndRoom {
+		// 		// lets check if the pats have seme room at the index because this can ce a collesion
+		// 		if notcollesion(result, path) {
+		// 			result = append(result, path)
+		// 		}
+		// 	}
+		// 	// lets get all the rooms that are connected to the current room
+		// 	if currentRoom == F.StartRoom {
+		// 		for _, connection := range F.Links[currentRoom] {
+		// 			if !contains(path, connection) {
+		// 				newPath := append([]string{}, path...)
+		// 				newPath = append(newPath, connection)
+		// 				queue = append(queue, newPath)
+		// 				fmt.Println(newPath)
 
-	// for len(queue) > 0 {
-	// 	// count := 0
-	// 	path := queue[0]
-	// 	queue = queue[1:]
-	// 	currentRoom := path[len(path)-1]
-	// 	// lets append the path if the room is the end roomi
-	// 	if currentRoom == F.EndRoom {
-	// 		// lets check if the pats have seme room at the index because this can ce a collesion
-	// 		if notcollesion(result, path) {
-	// 			result = append(result, path)
-	// 		}
-	// 	}
-	// 	// lets get all the rooms that are connected to the current room
-	// 	if currentRoom == F.StartRoom {
-	// 		for _, connection := range F.Links[currentRoom] {
-	// 			if !contains(path, connection) {
-	// 				newPath := append([]string{}, path...)
-	// 				newPath = append(newPath, connection)
-	// 				queue = append(queue, newPath)
-	// 				fmt.Println(newPath)
+		// 			}
+		// 		}
+		// 	}
+		// 	// for _, connection := range F.Links[currentRoom] {
+		// 	// 	if !contains(path, connection) {
+		// 	// 		newPath := append([]string{}, path...)
+		// 	// 		newPath = append(newPath, connection)
+		// 	// 		queue = append(queue, newPath)
+		// 	// 		count++
+		// 	// 	}
+		// 	// }
+		// 	// if count == len(F.Links[F.StartRoom]) {
+		// 	// 	F.Links[currentRoom] = nil
+		// 	// }
+		// 	// free the link from the map
+		// 	// F.Links[currentRoom] = nil
 
-	// 			}
-	// 		}
-	// 	}
-	// 	// for _, connection := range F.Links[currentRoom] {
-	// 	// 	if !contains(path, connection) {
-	// 	// 		newPath := append([]string{}, path...)
-	// 	// 		newPath = append(newPath, connection)
-	// 	// 		queue = append(queue, newPath)
-	// 	// 		count++
-	// 	// 	}
-	// 	// }
-	// 	// if count == len(F.Links[F.StartRoom]) {
-	// 	// 	F.Links[currentRoom] = nil
-	// 	// }
-	// 	// free the link from the map
-	// 	// F.Links[currentRoom] = nil
-
-	// }
-	return result
+		// }*/
+	//return result
 }
 
 // func contains(path []string, connection string) bool {
@@ -303,8 +330,40 @@ func (F *Farm) Crate_Graph() *Graph {
 		graph.Add_Verteces(room)
 		for _, jar := range jiran {
 			graph.Add_Edges(room, jar)
+			graph.Add_Edges(jar, room)
 		}
 
 	}
 	return graph
+}
+
+// lets craete the matrix reperesentation
+func (F *Farm) Crate_Matricx() ([][]bool, []string) {
+	// lets extract unique rooms names
+	size := len(F.Rooms)
+	rooms := make([]string, 0, size)
+	for room := range F.Rooms {
+		rooms = append(rooms, room)
+	}
+	// lets create the matrix and initialize it
+
+	matrix := make([][]bool, size)
+	for i := range matrix {
+		matrix[i] = make([]bool, size)
+	}
+
+	//  Populate the adjacency matrix using Links
+	for i, room := range rooms {
+		for _, jiran := range F.Links[room] {
+			// find the index of the jiran room
+			for j, linkedroom := range rooms {
+				if linkedroom == jiran {
+					matrix[i][j] = true
+					break
+				}
+			}
+		}
+	}
+
+	return matrix, rooms
 }

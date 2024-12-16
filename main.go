@@ -25,10 +25,19 @@ func main() {
 		return
 	}
 
-	fmt.Println(farm.StartRoom)
-	fmt.Println(farm.EndRoom)
-	graph := farm.Crate_Graph()
-	paths := farm.Path_Finder(graph)
+	//fmt.Println(farm.StartRoom)
+	//fmt.Println(farm.EndRoom)
+	//graph := farm.Crate_Graph()
+	Matrix, roomNames := farm.Crate_Matricx()
+	startIndex := -1
+	for i, name := range roomNames {
+		if name == farm.StartRoom {
+			startIndex = i
+			break
+		}
+	}
+	fmt.Println(Matrix)
+	paths := farm.Path_Finder(Matrix, startIndex, roomNames)
 	fmt.Println(paths)
 	fmt.Println("good data")
 }
