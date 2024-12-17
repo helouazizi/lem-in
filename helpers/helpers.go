@@ -72,7 +72,7 @@ this function check data validation
 func (F *Farm) ReadFile(fileName string) error {
 	// open the file
 	var err error
-	graph := Add_Graph()
+	//graph := Add_Graph()
 	fileinfo, err := os.Stat("test.txt")
 	if err != nil {
 		return err
