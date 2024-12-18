@@ -3,7 +3,6 @@ package helpers
 
 import (
 	"bufio"
-	"container/list"
 	"errors"
 	"fmt"
 	"os"
@@ -27,33 +26,6 @@ type Farm struct {
 }
 
 // / lets represent our graph
-type Graph struct {
-	GraphASList map[string]*list.List
-}
-
-// lets add a methode  to initialize the graph
-func Add_Graph() (G *Graph) {
-	return &Graph{
-		GraphASList: make(map[string]*list.List),
-	}
-}
-
-// lets create a methode to ad verteces
-func (G *Graph) Add_Verteces(v string) {
-	G.GraphASList[v] = list.New()
-}
-
-// lets create a methode to add edges 
-func (G *Graph) Add_Edges(v1, v2 string){
-	if G.GraphASList[v1] == nil {
-		G.GraphASList[v1] = list.New()
-	}
-	if G.GraphASList[v2] == nil {
-		G.GraphASList[v2] = list.New()
-	}
-	G.GraphASList[v1].PushBack(v2)
-	G.GraphASList[v2].PushBack(v1)
-}
 
 /*
 this function will read the file data
@@ -72,7 +44,7 @@ this function check data validation
 func (F *Farm) ReadFile(fileName string) error {
 	// open the file
 	var err error
-	//graph := Add_Graph()
+	// graph := Add_Graph()
 	fileinfo, err := os.Stat("test.txt")
 	if err != nil {
 		return err
@@ -182,89 +154,82 @@ func (F *Farm) ReadFile(fileName string) error {
 }
 
 func (F *Farm) Path_Finder() [][]string {
-	// lets frre up the rooms map for memory
-	F.Rooms = nil
-	fmt.Println(F.Rooms, "rooms has been removed")
-	// lets extract all start direct neghbors
 	jiran_dyal_start := F.Links[F.StartRoom]
-	// lets create a map to track the visited rooms
-	visited := make(map[string]bool)
-	visited[F.StartRoom] = true
-	result := [][]string{}
-	for _, jar := range jiran_dyal_start {
-		path := []string{F.StartRoom}
-		path = append(path, jar)
-		visited[jar] = true
+	F.Rooms = nil
 
-		result = append(result, path)
+	result := [][]string{}
+
+	for _, jar := range jiran_dyal_start {
+		visited := make(map[string]bool)
+
+		visited[F.StartRoom] = true
+		visited[jar] = true
+		queue := [][]string{{F.StartRoom, jar}}
+
+		for len(queue) > 0 {
+
+			path := queue[0]
+			queue = queue[1:]
+
+			node := path[len(path)-1]
+
+			if node == F.EndRoom {
+
+				result = append(result, path)
+			
+			}
+
+			for _, neighbor := range F.Links[node] {
+
+				if !contains(path, neighbor) && !visited[neighbor] {
+					visited[neighbor]= true
+
+					newPath := append([]string{}, path...)
+
+					newPath = append(newPath, neighbor)
+					queue = append(queue, newPath)
+					
+				}
+			}
+		}
 
 	}
-
-	// for len(queue) > 0 {
-	// 	// count := 0
-	// 	path := queue[0]
-	// 	queue = queue[1:]
-	// 	currentRoom := path[len(path)-1]
-	// 	// lets append the path if the room is the end roomi
-	// 	if currentRoom == F.EndRoom {
-	// 		// lets check if the pats have seme room at the index because this can ce a collesion
-	// 		if notcollesion(result, path) {
-	// 			result = append(result, path)
-	// 		}
-	// 	}
-	// 	// lets get all the rooms that are connected to the current room
-	// 	if currentRoom == F.StartRoom {
-	// 		for _, connection := range F.Links[currentRoom] {
-	// 			if !contains(path, connection) {
-	// 				newPath := append([]string{}, path...)
-	// 				newPath = append(newPath, connection)
-	// 				queue = append(queue, newPath)
-	// 				fmt.Println(newPath)
-
-	// 			}
-	// 		}
-	// 	}
-	// 	// for _, connection := range F.Links[currentRoom] {
-	// 	// 	if !contains(path, connection) {
-	// 	// 		newPath := append([]string{}, path...)
-	// 	// 		newPath = append(newPath, connection)
-	// 	// 		queue = append(queue, newPath)
-	// 	// 		count++
-	// 	// 	}
-	// 	// }
-	// 	// if count == len(F.Links[F.StartRoom]) {
-	// 	// 	F.Links[currentRoom] = nil
-	// 	// }
-	// 	// free the link from the map
-	// 	// F.Links[currentRoom] = nil
-
-	// }
+	
 	return result
 }
 
-// func contains(path []string, connection string) bool {
-// 	for _, connected := range path {
-// 		if connected == connection {
-// 			return true
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+// func (F *Farm) Unique_Path(result [][]string, paths [][]string) []string {
+// 	res := []string{}
+// 	for _, newpath := range paths{
+// 		for _, oldpath := range result{
+// 			if !F.contains(oldpath, newpath){
+// 				res = newpath
+// 				break
+
+// 			}
+
+// 		}
+
+// 	}
+// 	return res
+
+// }
+// func (F *Farm)contains(oldpath, newpath []string) bool {
+// 	for _, oldroom := range oldpath {
+// 		for _, newroom := range newpath {
+// 			if oldroom == newroom && oldroom != F.EndRoom &&  oldroom!= F.StartRoom{
+// 				return true
+// 			}
 // 		}
 // 	}
 // 	return false
-// }
-
-// func notcollesion(result [][]string, path []string) bool {
-// 	for _, oldpath := range result {
-// 		minlen := len(oldpath)
-// 		// this condition avoiding out of range
-// 		if len(path) < len(oldpath) {
-// 			minlen = len(path)
-// 		}
-// 		// be sure to ignore strat room and end room
-// 		for i := 1; i < minlen-1; i++ {
-// 			if oldpath[i] == path[i] {
-// 				return false
-// 			}
-// 		}
-
-// 	}
-// 	return true
 // }
