@@ -87,12 +87,15 @@ func (F *Farm) ReadFile(fileName string) error {
 		if i == 2 {
 			check := strings.Split(line, " ")
 			F.StartRoom = check[0]
+
 			i = 1
 
 		}
+
 		if i == 3 {
 			check := strings.Split(line, " ")
 			F.EndRoom = check[0]
+
 			i = 1
 
 		}
@@ -117,6 +120,7 @@ func (F *Farm) ReadFile(fileName string) error {
 			_, exist := F.Rooms[check[0]]
 			if !exist {
 				F.Rooms[check[0]] = &Room{X: check[1], Y: check[2]}
+
 			} else {
 				return errors.New("found Duplicated rooms")
 			}
@@ -140,6 +144,8 @@ func (F *Farm) ReadFile(fileName string) error {
 			}
 			F.Links[link[0]] = append(F.Links[link[0]], link[1])
 			F.Links[link[1]] = append(F.Links[link[1]], link[0])
+
+			//graph.Add_Edges(link[1],link[0])
 
 		} else {
 			continue
@@ -193,6 +199,22 @@ func (F *Farm) Path_Finder() [][]string {
 			}
 		}
 
+	for len(queue) > 0 {
+		vertex := queue[0]
+		queue = queue[1:]
+
+		// Explore neighbors
+		for i := 0; i < len(adjacencyMatrix[vertex]); i++ {
+			if adjacencyMatrix[vertex][i] && !visited[i] {
+				visited[i] = true
+				queue = append(queue, i)
+
+				// Create a new path for this neighbor
+				newPath := append([]string(nil), currentPath...) // Copy current path
+				newPath = append(newPath, roomNames[i])          // Add the neighbor
+				paths = append(paths, newPath)                   // Store the new path
+			}
+		}
 	}
 	
 	return result

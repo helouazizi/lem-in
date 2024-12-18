@@ -25,14 +25,19 @@ func main() {
 		return
 	}
 
-	// fmt.Println(farm.Ants)
-
-	fmt.Println(farm.StartRoom)
-	fmt.Println(farm.EndRoom)
-	// fmt.Println(farm.Rooms)
-
-	paths := farm.Path_Finder()
+	//fmt.Println(farm.StartRoom)
+	//fmt.Println(farm.EndRoom)
+	//graph := farm.Crate_Graph()
+	Matrix, roomNames := farm.Crate_Matricx()
+	startIndex := -1
+	for i, name := range roomNames {
+		if name == farm.StartRoom {
+			startIndex = i
+			break
+		}
+	}
+	fmt.Println(Matrix)
+	paths := farm.Path_Finder(Matrix, startIndex, roomNames)
 	fmt.Println(paths)
-	// fmt.Println(farm.Links,"links has been removed")
 	fmt.Println("good data")
 }

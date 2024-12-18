@@ -1,3 +1,5 @@
+// test3/main.go
+
 // test2/main.go
 package main
 
@@ -7,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -32,10 +33,7 @@ func CreateAdjacencyMatrix(farm *Farm) ([][]bool, []string, int, int) {
 	endIndex := 0
 	roomNames := make([]string, 0, size)
 	for name := range farm.Rooms {
-		// lets delete this room from the map
-		// after we've added it to the matrix
-		// we dont need it any more
-		delete(farm.Rooms, name)
+
 		roomNames = append(roomNames, name)
 	}
 
@@ -59,116 +57,69 @@ func CreateAdjacencyMatrix(farm *Farm) ([][]bool, []string, int, int) {
 				}
 			}
 		}
-		// lets delete this room with it links from the link map
-		// after we have processed it
-		delete(farm.Links, roomName)
 	}
 	// lets clear the maps we dont need them any more
-<<<<<<< HEAD
-	// farm.Links = nil
-	// farm.Rooms = nil
-	return adjacencyMatrix, roomNames, startIndex, endIndex
-}
-
-func (F *Farm) FindAllPaths(adjacencyMatrix [][]bool, start int, end int, roomNames []string, ants int) [][]string {
-=======
-	//farm.Links = nil
-	//farm.Rooms = nil
+	farm.Links = nil
+	farm.Rooms = nil
 	return adjacencyMatrix, roomNames, startIndex, endIndex
 }
 
 func FindAllPaths(adjacencyMatrix [][]bool, start int, end int, roomNames []string, ants int) [][]string {
->>>>>>> refs/remotes/origin/main
 	var paths [][]string
 	var currentPath []string
-
 	visited := make([]bool, len(roomNames))
-<<<<<<< HEAD
-	// foundEnoughPaths := false // Flag to indicate if we found enough paths
-=======
-	//foundEnoughPaths := false // Flag to indicate if we found enough paths
->>>>>>> refs/remotes/origin/main
 
-	var dfs func(vertex int)
-	dfs = func(vertex int) {
+	// Use a stack to manage the DFS
+	stack := []struct {
+		vertex      int
+		currentPath []string
+	}{
+		{start, []string{roomNames[start]}},
+	}
+
+	for len(stack) > 0 {
+		// Pop from the stack
+		top := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		vertex := top.vertex
+		currentPath = top.currentPath
+
 		visited[vertex] = true
-		currentPath = append(currentPath, roomNames[vertex])
 
 		if vertex == end {
 			// Found a path to the end
-<<<<<<< HEAD
-			// fmt.Println(currentPath)
-			if !F.collesion(paths, currentPath) {
-				paths = append(paths, append([]string(nil), currentPath...))
-			}
-			// Store a copy of the current path
-=======
-			//fmt.Println(currentPath)
 			paths = append(paths, append([]string(nil), currentPath...)) // Store a copy of the current path
->>>>>>> refs/remotes/origin/main
-			//fmt.Println("Found path:", currentPath)                      // Debug print
-			//paths = append(paths, currentPath)
-			// Check if we have found enough paths
-			//if len(paths) == ants {
-			//foundEnoughPaths = true // Set the flag to true
-			//return                  // Stop searching if we have enough paths
-			//}
 		} else {
 			// Explore neighbors
 			for i := 0; i < len(adjacencyMatrix[vertex]); i++ {
 				if adjacencyMatrix[vertex][i] && !visited[i] {
-					dfs(i) // Recur for the next vertex
-					//if foundEnoughPaths { // Check again after returning from recursion
-					//return // Stop searching if we have enough paths
-					//}
+					// Create a new path for the next vertex
+					newPath := append([]string(nil), currentPath...) // Copy currentPath
+					newPath = append(newPath, roomNames[i])          // Add the next room
+					stack = append(stack, struct {
+						vertex      int
+						currentPath []string
+					}{i, newPath})
 				}
 			}
 		}
 
 		// Backtrack
 		visited[vertex] = false
-		currentPath = currentPath[:len(currentPath)-1]
 	}
 
-	dfs(start)
 	return paths
 }
-<<<<<<< HEAD
-
-func (f *Farm) collesion(result [][]string, path []string) bool {
-	for _, paths := range result {
-		for _, room := range path {
-			if f.contains(paths, room) {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-func (f *Farm) contains(path []string, rom string) bool {
-	for _, room := range path {
-		if room == rom && room != f.EndRoom && room != f.StartRoom {
-			return true
-		}
-	}
-	return false
-}
-
-=======
->>>>>>> refs/remotes/origin/main
 func (F *Farm) ReadFile(fileName string) error {
 	// open the file
 	var err error
 
-<<<<<<< HEAD
-=======
 	fileinfo, err := os.Stat("test.txt")
 	if err != nil {
 		return err
 	}
 	F.FileSize = int64(fileinfo.Size())
->>>>>>> refs/remotes/origin/main
 	exist := 0
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -239,10 +190,7 @@ func (F *Farm) ReadFile(fileName string) error {
 			_, exist := F.Rooms[check[0]]
 			if !exist {
 				F.Rooms[check[0]] = &Room{X: check[1], Y: check[2]}
-<<<<<<< HEAD
-=======
 
->>>>>>> refs/remotes/origin/main
 			} else {
 				return errors.New("found Duplicated rooms")
 			}
@@ -267,11 +215,7 @@ func (F *Farm) ReadFile(fileName string) error {
 			F.Links[link[0]] = append(F.Links[link[0]], link[1])
 			F.Links[link[1]] = append(F.Links[link[1]], link[0])
 
-<<<<<<< HEAD
-			// graph.Add_Edges(link[1],link[0])
-=======
 			//graph.Add_Edges(link[1],link[0])
->>>>>>> refs/remotes/origin/main
 
 		} else {
 			continue
@@ -295,26 +239,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("file reded good")
 
 	// Create the adjacency matrix
-	adjMatrix, roomNames, startIndex, endIndex := CreateAdjacencyMatrix(farm)
+	adjacencyMatrix, roomNames, startIndex, endIndex := CreateAdjacencyMatrix(farm)
 
-	// Find all paths
-<<<<<<< HEAD
-	paths := farm.FindAllPaths(adjMatrix, startIndex, endIndex, roomNames, farm.Ants)
-=======
-	paths := FindAllPaths(adjMatrix, startIndex, endIndex, roomNames, farm.Ants)
->>>>>>> refs/remotes/origin/main
+	fmt.Println(farm.Rooms, "rooms are here")
+	fmt.Println(farm.Links, "links here")
+	fmt.Println("matrix craeted  good")
+	paths := FindAllPaths(adjacencyMatrix, startIndex, endIndex, roomNames, farm.Ants)
 
-	// Sort paths by length
-	sort.Slice(paths, func(i, j int) bool {
-		return len(paths[i]) < len(paths[j])
-	})
-<<<<<<< HEAD
-	for _, path := range paths {
-		fmt.Println(path)
+	// Print the paths found by BFS
+	fmt.Println("dFS Paths:")
+	for i, path := range paths {
+		fmt.Println(path, "path number", i)
 	}
-=======
-
->>>>>>> refs/remotes/origin/main
+	fmt.Println(len(paths), "good")
 }
