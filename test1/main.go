@@ -2,9 +2,26 @@
 package main
 
 import (
+	"bufio"
 	"container/list"
+	"errors"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 )
+
+type Room struct {
+	Name string
+	X, Y string
+}
+type Farm struct {
+	Rooms              map[string]*Room
+	Links              map[string][]string
+	StartNeighbots     []string
+	StartRoom, EndRoom string
+	Ants               int
+}
 
 // Graph represents an undirected graph
 type Graph struct {
@@ -49,14 +66,11 @@ func BFS(g *Graph, start, end string) [][]string {
 	for queue.Len() > 0 {
 		current := queue.Front().Value.(string)
 		queue.Remove(queue.Front())
-
-		//if len(result) == 0 || current != result[len(result)-1] {
 		result = append(result, current)
-		//}
 		if current == end {
 			test = append(test, result)
 			queue.Init()
-			//queue.PushFront(start)
+			// queue.PushFront(start)
 			visited[start] = false
 			visited[end] = false
 			result = []string{}
@@ -78,21 +92,128 @@ func BFS(g *Graph, start, end string) [][]string {
 	return test
 }
 
-func main() {
+func (F *Farm) ReadFile(fileName string) (*Graph, error) {
+	// open the file
+	var err error
 	graph := NewGraph()
-	graph.AddVertex("0")
-	graph.AddVertex("1")
-	graph.AddVertex("2")
-	graph.AddVertex("3")
-	graph.AddVertex("4")
-	graph.AddVertex("5")
+	exist := 0
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	// read the file by using the buffio pkg
+	// that can give us convenient way to read input from a file
+	// line by line using the  function scan()
+	// befor looping lets inisialise our maps
+	if F.Rooms == nil {
+		F.Rooms = make(map[string]*Room)
+	}
+	if F.Links == nil {
+		F.Links = make(map[string][]string)
+	}
+	scanner := bufio.NewScanner(file)
+	i := 0
+	for scanner.Scan() {
 
-	graph.AddEdge("0", "1")
-	graph.AddEdge("0", "2")
-	graph.AddEdge("1", "3")
-	graph.AddEdge("2", "4")
-	graph.AddEdge("4", "5")
-	graph.AddEdge("3", "5")
+		line := scanner.Text()
+		line = strings.TrimSpace(line)
+		// lets check if the first line is the valid number off ants
+		if i == 0 {
+			F.Ants, err = strconv.Atoi(line)
+			if err != nil {
+				return nil, err
+			}
+			if F.Ants <= 0 {
+				return nil, errors.New("invalid ants number")
+			}
+			i++
+			continue
+		}
+		if i == 2 {
+			check := strings.Split(line, " ")
+			F.StartRoom = check[0]
 
-	fmt.Println("BFS traversal:", BFS(graph, "0", "5"))
+			i = 1
+
+		}
+
+		if i == 3 {
+			check := strings.Split(line, " ")
+			F.EndRoom = check[0]
+
+			i = 1
+
+		}
+
+		if line == "##start" {
+			i = 2
+			exist++
+			///F.Rooms["##start"] = Room{Name: "", X: "", Y: ""}
+			continue
+		}
+		if line == "##end" {
+			i = 3
+			exist += 2
+			// F.Rooms["##end"] = Room{Name: "", X: "", Y: ""}
+			continue
+		}
+		if line == "" || (line[0] == '#' && line != "##start" && line != "##end") {
+			continue
+		}
+		check := strings.Split(line, " ")
+		if len(check) == 3 {
+			_, exist := F.Rooms[check[0]]
+			if !exist {
+				F.Rooms[check[0]] = &Room{X: check[1], Y: check[2]}
+			} else {
+				return nil, errors.New("found Duplicated rooms")
+			}
+
+		} else if len(check) == 1 {
+			link := strings.Split(line, "-")
+			if len(link) != 2 {
+				fmt.Println(line)
+				return nil, errors.New("no valid link found")
+
+			} 
+			_, exist := F.Rooms[link[0]]
+			if !exist {
+				fmt.Println(line)
+				return nil, errors.New("no valid link found")
+			}
+			_, exist1 := F.Rooms[link[1]]
+			if !exist1 {
+				fmt.Println(line)
+				return nil, errors.New("no valid link found")
+			}
+			F.Links[link[0]] = append(F.Links[link[0]], link[1])
+			F.Links[link[1]] = append(F.Links[link[1]], link[0])
+			graph.adjacencyList[link[0]] = graph.AddEdge(link[0],link[1])
+
+			// graph.Add_Edges(link[1],link[0])
+
+		} else {
+			continue
+		}
+
+	}
+	if exist != 3 {
+		return nil, errors.New("no start or end room")
+	}
+
+	return graph, nil
+}
+
+func () createGraph() {
+
+}
+
+func main() {
+	farm := &Farm{}
+	graph, err := farm.ReadFile(os.Args[1])
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }

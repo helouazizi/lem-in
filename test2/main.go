@@ -26,6 +26,16 @@ type Farm struct {
 	Ants               int
 }
 
+var f Farm
+
+func constructor() {
+	for i := 0; i < len(f.StartNeighbots); i++ {
+		Paths = append(Paths, []string{"", "", "", "", "", "", "", "", "", ""})
+	}
+}
+
+var Paths = make([][]string, len(f.StartNeighbots))
+
 // CreateAdjacencyMatrix creates an adjacency matrix from the Farm struct
 func CreateAdjacencyMatrix(farm *Farm) ([][]bool, []string, int, int) {
 	farm.StartNeighbots = farm.Links[farm.StartRoom]
@@ -70,24 +80,43 @@ func CreateAdjacencyMatrix(farm *Farm) ([][]bool, []string, int, int) {
 	return adjacencyMatrix, roomNames, startIndex, endIndex
 }
 
-func (F *Farm) FindAllPaths(adjacencyMatrix [][]bool, start int, end int, roomNames []string, ants int, badroom string) [][]string {
-	var paths [][]string
+func (F *Farm) FindAllPaths(adjacencyMatrix [][]bool, start int, end int, roomNames []string, ants int, badrooms []string) ([][]string, [][]string) {
+	constructor()
+	var badpaths [][]string
 	var currentPath []string
+	f = *F
+	// pathstructure := &Paths{
+	// 	Paths: make([][]string, len(F.StartNeighbots)),
+	// }
 	visited := make([]bool, len(roomNames))
-
+	enough := false
 	var dfs func(vertex int)
 	dfs = func(vertex int) {
 		visited[vertex] = true
 		currentPath = append(currentPath, roomNames[vertex])
 
 		if vertex == end {
-			if !contains(currentPath, badroom) {
-				paths = append(paths, append([]string(nil), currentPath...))
+			if len(Paths) == ants {
+				enough = true
+			}
+			if !contains(currentPath, badrooms) {
+				index, best := bestone(currentPath)
+				if best && index == -1 {
+					Paths = append(Paths, currentPath)
+				} else if best && index != -1 {
+					Paths[index] = currentPath
+				}
+
+			} else {
+				badpaths = append(badpaths, append([]string(nil), currentPath...))
 			}
 		} else {
 			// Explore neighbors
 			for i := 0; i < len(adjacencyMatrix[vertex]); i++ {
 				if adjacencyMatrix[vertex][i] && !visited[i] {
+					if enough {
+						return
+					}
 					dfs(i)
 				}
 			}
@@ -99,16 +128,58 @@ func (F *Farm) FindAllPaths(adjacencyMatrix [][]bool, start int, end int, roomNa
 	}
 
 	dfs(start)
-	return paths
+	return Paths, badpaths
 }
 
-func contains(s []string, e string) bool {
+func bestone(cureentpath []string) (int, bool) {
+	for i, path := range Paths {
+		if path == nil {
+			return -1, true
+		} else {
+			oldneighbor := path[0]
+			neighbor := cureentpath[0]
+			if oldneighbor == neighbor {
+				if len(cureentpath) < len(path) {
+					return i, true
+				}
+			}
+		}
+	}
+	if len(Paths) == 0 {
+		return -1, true
+	}
+	return -1, false
+}
+
+func contains(s []string, e []string) bool {
 	for _, a := range s {
-		if a == e {
-			return true
+		for _, b := range e {
+			if a == b {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func Filter(goodpaths, badpaths [][]string) [][]string {
+	result := make([][]string, 0)
+	for i, badpath := range badpaths {
+		count := 0
+		for _, goodpath := range goodpaths {
+			if !contains(badpath[1:len(badpath)-1], goodpath[1:len(goodpath)-1]) {
+				count++
+			} else {
+				// delete this path
+				badpaths[i] = nil
+			}
+		}
+		if count == len(goodpaths) || len(goodpaths) == 0 {
+			result = append(result, badpath)
+		}
+
+	}
+	return result
 }
 
 func (F *Farm) ReadFile(fileName string) error {
@@ -233,33 +304,59 @@ func (F *Farm) ReadFile(fileName string) error {
 }
 
 func main() {
-	// Parse the input data
+	// Parse the input datacd
 	farm := &Farm{
 		Rooms: make(map[string]*Room),
 		Links: make(map[string][]string),
 	}
+
 	err := farm.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("file read")
 
 	// Create the adjacency matrix
 	adjMatrix, roomNames, startIndex, endIndex := CreateAdjacencyMatrix(farm)
 	// lets sort the badrooms
+	fmt.Println("matrix created")
 	sort.Slice(farm.badrooms, func(i, j int) bool {
 		return len(farm.badrooms[i]) < len(farm.badrooms[j])
 	})
-	baaaaadroom := farm.badrooms[len(farm.badrooms)-1][0]
+	maxsize := len(farm.badrooms[len(farm.badrooms)-1])
+	all_badrooms := []string{}
+	for _, barroom := range farm.badrooms {
+		if len(barroom) == maxsize && barroom[0] != farm.EndRoom && barroom[0] != farm.StartRoom {
+			all_badrooms = append(all_badrooms, barroom[0])
+		}
+	}
+	fmt.Println("badrooms extracted")
+	fmt.Println(all_badrooms)
+	// baaaaadroom := all_badrooms[len(all_badrooms)-1]
+	// for _, room := range all_badrooms {
+	// 	fmt.Println(room)
+	// }
 
 	// Find all paths
-	paths := farm.FindAllPaths(adjMatrix, startIndex, endIndex, roomNames, farm.Ants, baaaaadroom)
+	_, _ = farm.FindAllPaths(adjMatrix, startIndex, endIndex, roomNames, farm.Ants, all_badrooms)
+	// extrapaths := filter(paths.Paths, badpaths)
+	// goodpaths = append(goodpaths, extrapaths...)
 
 	// Sort paths by length
-	sort.Slice(paths, func(i, j int) bool {
-		return len(paths[i]) < len(paths[j])
-	})
-	for _, path := range paths {
-		fmt.Println(path)
+	// sort.Slice(goodpaths, func(i, j int) bool {
+	// 	return len(goodpaths[i]) < len(goodpaths[j])
+	// })
+	// for _, path := range goodpaths {
+	// 	fmt.Println(path, "good")
+	// }
+	// for _, badpath := range badpaths {
+	// 	fmt.Println(badpath, "bad")
+	// }
+	// fmt.Println(farm.StartNeighbots)
+	// fmt.Println(len(goodpaths))
+	// fmt.Println(goodpaths)
+	// fmt.Println(baaaaadroom)
+	for _, path := range Paths {
+		fmt.Println(path, "after")
 	}
-	fmt.Println(farm.badrooms)
 }
